@@ -1,0 +1,19 @@
+{
+  "name": "devtinder---backend",
+  "version": "1.0.0",
+  "description": "backend of devTinder",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "javascript"
+  ],
+  "author": "Prince Mishra",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
