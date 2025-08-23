@@ -1,33 +1,28 @@
 const express = require("express")
-
 const app = express();
 
-app.use("/user", (req, res, next) => {
-    console.log("Handling the route user");
-    next();
-},
-    (req, res, next) => {
-        console.log("Handling the route user 2!!");
-        // res.send("2nd response !!")
-        next()
-    },
-    (req, res, next) => {
-        console.log("Handling the route user 3!!");
-        // res.send("3rd response !!")
-        next()
-    },
-    (req, res, next) => {
-        console.log("Handling the route user 4!!");
-        // res.send("4th response !!")
-        next()
-    },
-    (req, res, next) => {
-        console.log("Handling the route user 5!!");
-        res.send("5th response !!")
-        // next()
-    },
-)
+const { adminAuth, userAuth } = require("./middlewares/auth")
 
+
+//* Handle Auth Middleware for only GET request GET, POST
+app.use("/admin", adminAuth)
+
+app.post("/user/login", (req, res) => {
+    res.send("User logged in successfully")
+})
+
+app.get("/user/data", userAuth, (req, res) => {
+    res.send("User logged in successfully")
+})
+
+app.get("/admin/getAllData", (req, res) => {
+    // * Logic of fetching data
+    res.send("all Data sent")
+})
+
+app.get("/admin/deleteUser", (req, res) => {
+    res.send("Deleted a user")
+})
 
 app.listen(3000, () => {
     console.log("server is successfully listening");
