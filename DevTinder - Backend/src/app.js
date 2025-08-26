@@ -26,7 +26,7 @@ app.get("/user", async (req, res) => {
         const user = await User.findOne({ emailId: userEmail })
         if (!user) {
             res.status(404).send("user not found")
-        }else{
+        } else {
             res.send(user)
         }
         // const users = await User.find({
@@ -54,6 +54,33 @@ app.get("/feed", async (req, res) => {
         res.status(404).send("Something went wrong")
     }
 
+})
+
+// To delete an user but id
+app.delete("/user/:id", async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findByIdAndDelete(userId);
+        if (!user) {
+            return res.status(404).send("User not found");
+        }
+        res.send("User Deleted Successfully");
+    } catch (err) {
+        res.status(500).send("Something went wrong");
+    }
+});
+
+app.patch("/user", async (req, res) => {
+    const userId = req.body.userId
+    const data = req.body
+    try {
+        const user = await User.findByIdAndUpdate({ _id: userId }, data)
+        console.log(user);
+        res.send("User Updated Successfully")
+    } catch (err) {
+        res.status(404).send("Somthing went wrong")
+    }
 })
 
 connectDB()
