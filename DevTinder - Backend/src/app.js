@@ -3,9 +3,12 @@ const { validateSignUpData } = require("./utils/validation")
 const connectDB = require("./config/database")
 const app = express();
 const User = require("./models/user")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken")
 
 app.use(express.json())
+app.use(cookieParser())
 
 // * Creating a new user account record
 
@@ -20,7 +23,6 @@ app.post("/signup", async (req, res) => {
 
         //* Encrypt the password
         const passwordHash = await bcrypt.hash(password, 10)
-        console.log(passwordHash);
 
         // * Creating a new instance of the User model
         const user = new User({
@@ -51,6 +53,13 @@ app.post("/login", async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password)
 
         if (isPasswordValid) {
+
+            // Create a JWT Token
+            const token = await jwt.sign({ _id: user._id }, "DRV@TInder$790")
+
+            // Add the token to cookie and send the response back to user
+            res.cookie("token", token)
+
             res.send("login Sucessfully")
         } else {
             throw new Error("Invalid credentials")
@@ -61,6 +70,31 @@ app.post("/login", async (req, res) => {
     }
 })
 
+// * Profile
+app.get("/profile", async (req, res) => {
+    try {
+        const cookies = req.cookies
+
+        const { token } = cookies
+        if (!token) {
+            throw new Error("Invalid Token")
+        }
+
+        //* Validate my token
+        const decodedMsg = await jwt.verify(token, "DRV@TInder$790")
+
+        const { _id } = decodedMsg
+
+        const user = await User.findById(_id)
+        if (!user) {
+            throw new Error("User does not Exist") 
+        }
+        res.send(user)
+    }
+    catch (err) {
+        res.status(404).send("ERROR : " + err.message)
+    }
+})
 
 //* Get user by email
 app.get("/user", async (req, res) => {
@@ -89,7 +123,6 @@ app.get("/user", async (req, res) => {
 
 //! feed API - To get all the users from the database 
 app.get("/feed", async (req, res) => {
-    // console.log(User.name);
 
     try {
         const users = await User.find({})
@@ -147,7 +180,6 @@ app.patch("/user/:userId", async (req, res) => {
         const user = await User.findByIdAndUpdate({ _id: userId }, data, {
             runValidators: true
         })
-        console.log(user);
 
         res.send("User Updated Successfully")
     } catch (err) {
