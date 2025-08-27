@@ -1,26 +1,66 @@
 const express = require("express")
+const { validateSignUpData } = require("./utils/validation")
 const connectDB = require("./config/database")
 const app = express();
 const User = require("./models/user")
+const bcrypt = require("bcrypt")
 
 app.use(express.json())
 
+// * Creating a new user account record
+
 app.post("/signup", async (req, res) => {
-    // console.log(req.body);
-    const data = req.body
-    
-    // * Creating a new instance of the User model
-    const user = new User(req.body);
+
     try {
+
+        //! Validation of data
+        validateSignUpData(req)
+
+        const { firstName, lastName, emailId, password, gender } = req.body
+
+        //* Encrypt the password
+        const passwordHash = await bcrypt.hash(password, 10)
+        console.log(passwordHash);
+
+        // * Creating a new instance of the User model
+        const user = new User({
+            firstName,
+            lastName,
+            emailId,
+            password: passwordHash,
+            gender
+        });
+
         await user.save();
-        if (data?.skills.length > 5) {
-            throw new Error("Skills more than 5 not allowed")
-        }
         res.send("User added Successfully")
     } catch (err) {
-        res.status(400).send("Error saving the User : " + err.message)
+        res.status(400).send("Error : " + err.message)
     }
 })
+
+// * Login of Existing user
+app.post("/login", async (req, res) => {
+
+    try {
+        const { emailId, password } = req.body;
+
+        const user = await User.findOne({ emailId: emailId })
+        if (!user) {
+            throw new Error("Invalid credentials")
+        }
+        const isPasswordValid = await bcrypt.compare(password, user.password)
+
+        if (isPasswordValid) {
+            res.send("login Sucessfully")
+        } else {
+            throw new Error("Invalid credentials")
+        }
+
+    } catch (err) {
+        res.status(404).send("ERROR : " + err.message)
+    }
+})
+
 
 //* Get user by email
 app.get("/user", async (req, res) => {
@@ -100,8 +140,8 @@ app.patch("/user/:userId", async (req, res) => {
             throw new Error("Update Not Allowed")
         }
 
-        if (data?.skills.length > 5) {
-            throw new Error("Skills more than 5 not allowed")
+        if (data.skills && data.skills.length > 5) {
+            throw new Error("Skills more than 5 not allowed");
         }
 
         const user = await User.findByIdAndUpdate({ _id: userId }, data, {
