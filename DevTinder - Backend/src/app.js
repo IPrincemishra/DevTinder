@@ -7,14 +7,18 @@ app.use(express.json())
 
 app.post("/signup", async (req, res) => {
     // console.log(req.body);
-
+    const data = req.body
+    
     // * Creating a new instance of the User model
     const user = new User(req.body);
     try {
         await user.save();
+        if (data?.skills.length > 5) {
+            throw new Error("Skills more than 5 not allowed")
+        }
         res.send("User added Successfully")
     } catch (err) {
-        res.status(400).send("Error saving the User : ", err.message)
+        res.status(400).send("Error saving the User : " + err.message)
     }
 })
 
@@ -56,7 +60,7 @@ app.get("/feed", async (req, res) => {
 
 })
 
-// To delete an user but id
+// To delete an user by id
 app.delete("/user/:id", async (req, res) => {
     const userId = req.params.id;
 
@@ -71,15 +75,43 @@ app.delete("/user/:id", async (req, res) => {
     }
 });
 
-app.patch("/user", async (req, res) => {
-    const userId = req.body.userId
+// to update an data record
+app.patch("/user/:userId", async (req, res) => {
+    const userId = req.params.userId
     const data = req.body
+
     try {
-        const user = await User.findByIdAndUpdate({ _id: userId }, data)
+
+        const ALLOWED_UPDATES = [
+            "photoURL",
+            "about",
+            "gender",
+            "skills",
+            "firstName",
+            "lastName",
+            "age"
+        ];
+
+        const isUpdateAllowed = Object.keys(data).every((k) => ALLOWED_UPDATES.includes(k))
+
+
+
+        if (!isUpdateAllowed) {
+            throw new Error("Update Not Allowed")
+        }
+
+        if (data?.skills.length > 5) {
+            throw new Error("Skills more than 5 not allowed")
+        }
+
+        const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+            runValidators: true
+        })
         console.log(user);
+
         res.send("User Updated Successfully")
     } catch (err) {
-        res.status(404).send("Somthing went wrong")
+        res.status(404).send("Update fail : " + err.message)
     }
 })
 
