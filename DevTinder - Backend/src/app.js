@@ -6,7 +6,7 @@ const User = require("./models/user")
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken")
-
+const { userAuth } = require("./middlewares/auth")
 app.use(express.json())
 app.use(cookieParser())
 
@@ -50,12 +50,12 @@ app.post("/login", async (req, res) => {
         if (!user) {
             throw new Error("Invalid credentials")
         }
-        const isPasswordValid = await bcrypt.compare(password, user.password)
+        const isPasswordValid = await user.validatePassword(password)
 
         if (isPasswordValid) {
 
             // Create a JWT Token
-            const token = await jwt.sign({ _id: user._id }, "DRV@TInder$790")
+            const token = await user.getJWT()
 
             // Add the token to cookie and send the response back to user
             res.cookie("token", token)
@@ -71,24 +71,10 @@ app.post("/login", async (req, res) => {
 })
 
 // * Profile
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
     try {
-        const cookies = req.cookies
+        const user = req.user
 
-        const { token } = cookies
-        if (!token) {
-            throw new Error("Invalid Token")
-        }
-
-        //* Validate my token
-        const decodedMsg = await jwt.verify(token, "DRV@TInder$790")
-
-        const { _id } = decodedMsg
-
-        const user = await User.findById(_id)
-        if (!user) {
-            throw new Error("User does not Exist") 
-        }
         res.send(user)
     }
     catch (err) {
@@ -96,95 +82,13 @@ app.get("/profile", async (req, res) => {
     }
 })
 
-//* Get user by email
-app.get("/user", async (req, res) => {
-    const userEmail = req.body.emailId
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
 
-    try {
-        const user = await User.findOne({ emailId: userEmail })
-        if (!user) {
-            res.status(404).send("user not found")
-        } else {
-            res.send(user)
-        }
-        // const users = await User.find({
-        //     emailId: userEmail
-        // })
+    const user = req.user
 
-        // if (users.length === 0) {
-        //     res.status(404).send("user not found")
-        // } else {
-        //     res.send(users)
-        // }
-    } catch (err) {
-        res.status(400).send("Somthing went wrong")
-    }
-})
-
-//! feed API - To get all the users from the database 
-app.get("/feed", async (req, res) => {
-
-    try {
-        const users = await User.find({})
-        res.send(users)
-    } catch (err) {
-        res.status(404).send("Something went wrong")
-    }
-
-})
-
-// To delete an user by id
-app.delete("/user/:id", async (req, res) => {
-    const userId = req.params.id;
-
-    try {
-        const user = await User.findByIdAndDelete(userId);
-        if (!user) {
-            return res.status(404).send("User not found");
-        }
-        res.send("User Deleted Successfully");
-    } catch (err) {
-        res.status(500).send("Something went wrong");
-    }
-});
-
-// to update an data record
-app.patch("/user/:userId", async (req, res) => {
-    const userId = req.params.userId
-    const data = req.body
-
-    try {
-
-        const ALLOWED_UPDATES = [
-            "photoURL",
-            "about",
-            "gender",
-            "skills",
-            "firstName",
-            "lastName",
-            "age"
-        ];
-
-        const isUpdateAllowed = Object.keys(data).every((k) => ALLOWED_UPDATES.includes(k))
-
-
-
-        if (!isUpdateAllowed) {
-            throw new Error("Update Not Allowed")
-        }
-
-        if (data.skills && data.skills.length > 5) {
-            throw new Error("Skills more than 5 not allowed");
-        }
-
-        const user = await User.findByIdAndUpdate({ _id: userId }, data, {
-            runValidators: true
-        })
-
-        res.send("User Updated Successfully")
-    } catch (err) {
-        res.status(404).send("Update fail : " + err.message)
-    }
+    // Sending Connection Request
+    console.log("Sending a Connection request");
+    res.send(user.firstName + " sent the connection request")
 })
 
 connectDB()
