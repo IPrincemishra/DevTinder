@@ -5,7 +5,7 @@ const UserCard = ({ user = {} }) => {
     const { firstName, lastName, photoUrl, age, gender, about } = user
 
     return (
-        <div className="max-w-sm rounded-xl w-[300px] min-h-[300px] max-h-[450px] flex-wrap bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+        <div className="max-w-sm w-72 rounded-xl min-h-40 max-h-[450px] flex-wrap bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
             <figure className="relative h-56 w-full overflow-hidden">
                 <img
                     src={photoUrl}

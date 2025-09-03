@@ -28,14 +28,12 @@ const Feed = () => {
 
     return (
         !feed ? (
-            <div className='flex gap-5 items-center justify-center my-10'>
-                <ShimmerCard />
+            <div className='flex h-[69vh] gap-5 items-center justify-center my-10'>
                 <ShimmerCard />
             </div>
         ) : (
-            <div className='flex gap-5 items-center justify-center my-10'>
+            <div className='flex h-[69vh] gap-5 items-center justify-center my-10'>
                 <UserCard user={feed[0]} />
-                <UserCard user={feed[1]} />
             </div>
         )
     );
