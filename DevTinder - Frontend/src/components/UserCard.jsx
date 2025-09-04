@@ -1,8 +1,24 @@
+import axios from 'axios';
 import React from 'react';
+import { BASE_URL } from '../utils/constants';
+import { useDispatch } from 'react-redux';
+import { removeUserFromFeed } from '../utils/feedSlice';
 
 const UserCard = ({ user = {} }) => {
 
-    const { firstName, lastName, photoUrl, age, gender, about } = user
+    const { firstName, lastName, photoUrl, age, gender, about, _id } = user
+    const dispatch = useDispatch()
+
+    const handleSendRequest = async (status, _id) => {
+        try {
+            const res = await axios.post(`${BASE_URL}/request/send/${status}/${_id}`, { status, _id }, { withCredentials: true })
+
+
+            dispatch(removeUserFromFeed(_id))
+        } catch (err) {
+            console.log(err.response?.data || err.message);
+        }
+    }
 
     return (
         <div className="max-w-sm w-72 rounded-xl min-h-40 max-h-[450px] flex-wrap bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
@@ -29,11 +45,19 @@ const UserCard = ({ user = {} }) => {
                 </div>
                 <p className="mb-1 text-gray-600 line-clamp-3">{about}</p>
                 <div className="flex gap-2 mt-4 justify-evenly">
-                    <button className="btn btn-ghost border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition">Ignore</button>
-                    <button className="btn btn-primary rounded-full px-6 shadow hover:shadow-md transition">Send Request</button>
+                    <button
+                        className="btn btn-ghost border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition"
+                        onClick={() => handleSendRequest("ignored", _id)}
+                    >
+                        Ignore
+                    </button>
+                    <button
+                        className="btn btn-primary rounded-full px-6 shadow hover:shadow-md transition"
+                        onClick={() => handleSendRequest("interested", user._id)}
+                    >Send Request</button>
                 </div>
             </div>
-        </div>
+        </div >
 
     );
 };
